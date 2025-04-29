@@ -1,0 +1,131 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
+/*   Updated: 2025/04/29 14:13:11 by agaroux          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../includes/pipex.h"
+
+int	parent(char **av, int *fd, char **env, t_args *args)
+{
+	int	outfile;
+
+	close(fd[1]);
+	dup2(fd[0], STDIN_FILENO);
+	close(fd[0]);
+	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (outfile == -1)
+		return (perror("outfile"), 127);
+	dup2(outfile, STDOUT_FILENO);
+	close(outfile);
+	args->path->split_cmd = ft_split(av[3], ' ');
+	args->path->cmd = get_cmd_path(args->path->split_cmd[0], env, args);
+	if (!args->path->cmd)
+		return (write(2, "command not found\n", 19), 127);
+	if (execve(args->path->cmd, args->path->split_cmd, env) == -1)
+		return (perror("execve"), 127);
+	return (0);
+}
+
+int	child(char **av, int *fd, char **env, t_args *args)
+{
+	int	infile;
+
+	infile = open(av[1], O_RDWR, 0644);
+	if (infile == -1)
+		return (perror("infile"), 127);
+	args->path->split_cmd = ft_split(av[2], ' ');
+	dup2(infile, STDIN_FILENO);
+	close(infile);
+	close(fd[0]);
+	dup2(fd[1], STDOUT_FILENO);
+	close(fd[1]);
+	args->path->cmd = get_cmd_path(args->path->split_cmd[0], env, args);
+	if (!args->path->cmd)
+		return (write(2, "command not found\n", 19), 127);
+	if (execve(args->path->cmd, args->path->split_cmd, env) == -1)
+		return (perror("execve"), 127);
+	return (0);
+}
+
+char	*get_cmd_path(char *cmd, char **env, t_args *args)
+{
+	int	i;
+
+	i = -1;
+	if (access(cmd, X_OK) == 0)
+		return (ft_strdup(cmd));
+	while (env[++i])
+	{
+		if (ft_strncmp(env[i], "PATH=", 5) == 0)
+			args->path->paths = ft_split(env[i] + 5, ':');
+	}
+	if (!args->path->paths)
+		return (NULL);
+	i = -1;
+	while (args->path->paths[++i])
+	{
+		args->path->tmp = ft_strjoin(args->path->paths[i], "/");
+		args->path->full_path = ft_strjoin(args->path->tmp, cmd);
+		free(args->path->tmp);
+		if (access(args->path->full_path, X_OK) == 0)
+			return (args->path->full_path);
+		free(args->path->full_path);
+	}
+	return (NULL);
+}
+
+t_args	*init_struct(int argc, char **argv, char **env)
+{
+	t_args	*args;
+	t_path	*path;
+
+	args = malloc(sizeof(t_args));
+	if (!args)
+		return (NULL);
+	path = malloc(sizeof(t_path));
+	if (!path)
+		return (NULL);
+	args->path = path;
+	args->ac = argc;
+	args->av = argv;
+	args->env = env;
+	args->path->cmd = NULL;
+	args->path->full_path = NULL;
+	args->path->paths = NULL;
+	args->path->split_cmd = NULL;
+	return (args);
+}
+
+int	main(int argc, char **argv, char **env)
+{
+	int		fd[2];
+	t_args	*args;
+
+	args = init_struct(argc, argv, env);
+	if (argc != 5 || pipe(fd) == -1 || !args)
+		return (free_struct(args), 127);
+	args->pid1 = fork();
+	if (args->pid1 == -1)
+		return (free_struct(args), 127);
+	if (!args->pid1)
+	{
+		if (child(args->av, fd, args->env, args))
+			return (free_struct(args), 127);
+	}
+	args->pid2 = fork();
+	if (args->pid2 == -1)
+		return (free_struct(args), 127);
+	if (!args->pid2)
+	{
+		if (parent(args->av, fd, args->env, args))
+			return (free_struct(args), 127);
+	}
+	return (free_struct(args), 0);
+}
