@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
-/*   Updated: 2025/04/29 13:33:40 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/04/29 15:54:17 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@ void	free_tab(char **tab)
 {
 	int	i;
 
+	if (!tab)
+		return ;
 	i = 0;
 	while (tab[i])
 		free(tab[i++]);
@@ -34,6 +36,8 @@ void	free_struct(t_args *args)
 			free_tab(args->path->paths);
 		if (args->path->split_cmd)
 			free_tab(args->path->split_cmd);
+		if (args->path->cmd)
+			free(args->path->cmd);
 		free(args->path);
 	}
 	free(args);

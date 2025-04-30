@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
-/*   Updated: 2025/04/29 14:13:11 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/04/30 11:41:17 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,18 +16,23 @@ int	parent(char **av, int *fd, char **env, t_args *args)
 {
 	int	outfile;
 
-	close(fd[1]);
-	dup2(fd[0], STDIN_FILENO);
-	close(fd[0]);
 	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (outfile == -1)
 		return (perror("outfile"), 127);
+	args->path->split_cmd = ft_split(av[3], ' ');
+	close(fd[1]);
+	dup2(fd[0], STDIN_FILENO);
+	close(fd[0]);
 	dup2(outfile, STDOUT_FILENO);
 	close(outfile);
-	args->path->split_cmd = ft_split(av[3], ' ');
+	if (!args->path->split_cmd[0])
+	{
+		free_tab(args->path->split_cmd);
+		args->path->split_cmd = ft_split("cat", ' ');
+	}
 	args->path->cmd = get_cmd_path(args->path->split_cmd[0], env, args);
 	if (!args->path->cmd)
-		return (write(2, "command not found\n", 19), 127);
+		return (write(2, "command not found parent\n", 24), 127);
 	if (execve(args->path->cmd, args->path->split_cmd, env) == -1)
 		return (perror("execve"), 127);
 	return (0);
@@ -46,9 +51,14 @@ int	child(char **av, int *fd, char **env, t_args *args)
 	close(fd[0]);
 	dup2(fd[1], STDOUT_FILENO);
 	close(fd[1]);
+	if (!args->path->split_cmd[0])
+	{
+		free_tab(args->path->split_cmd);
+		args->path->split_cmd = ft_split("cat", ' ');
+	}
 	args->path->cmd = get_cmd_path(args->path->split_cmd[0], env, args);
 	if (!args->path->cmd)
-		return (write(2, "command not found\n", 19), 127);
+		return (write(2, "command not found child\n", 23), 127);
 	if (execve(args->path->cmd, args->path->split_cmd, env) == -1)
 		return (perror("execve"), 127);
 	return (0);
@@ -108,9 +118,9 @@ int	main(int argc, char **argv, char **env)
 	int		fd[2];
 	t_args	*args;
 
+	if (argc != 5 || pipe(fd) == -1 || !env)
+		return (127);
 	args = init_struct(argc, argv, env);
-	if (argc != 5 || pipe(fd) == -1 || !args)
-		return (free_struct(args), 127);
 	args->pid1 = fork();
 	if (args->pid1 == -1)
 		return (free_struct(args), 127);
@@ -127,5 +137,6 @@ int	main(int argc, char **argv, char **env)
 		if (parent(args->av, fd, args->env, args))
 			return (free_struct(args), 127);
 	}
+	wait(NULL);
 	return (free_struct(args), 0);
 }
