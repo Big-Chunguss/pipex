@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/10 11:43:00 by agaroux           #+#    #+#             */
-/*   Updated: 2025/04/29 14:04:41 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/05/06 11:49:23 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,4 +49,7 @@ int			main(int argc, char **argv, char **env);
 void		print_tab(char **map);
 char		*get_cmd_path(char *cmd, char **env, t_args *args);
 void		free_struct(t_args *args);
+t_args		*init_struct(int argc, char **argv, char **env);
+void		shorten_main(t_args *args, int *fd);
+
 #endif

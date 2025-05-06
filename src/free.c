@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
-/*   Updated: 2025/04/29 15:54:17 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/05/06 11:19:29 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,4 +41,26 @@ void	free_struct(t_args *args)
 		free(args->path);
 	}
 	free(args);
+}
+
+t_args	*init_struct(int argc, char **argv, char **env)
+{
+	t_args	*args;
+	t_path	*path;
+
+	args = malloc(sizeof(t_args));
+	if (!args)
+		return (NULL);
+	path = malloc(sizeof(t_path));
+	if (!path)
+		return (NULL);
+	args->path = path;
+	args->ac = argc;
+	args->av = argv;
+	args->env = env;
+	args->path->cmd = NULL;
+	args->path->full_path = NULL;
+	args->path->paths = NULL;
+	args->path->split_cmd = NULL;
+	return (args);
 }

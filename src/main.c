@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
-/*   Updated: 2025/04/30 11:41:17 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/05/06 13:03:47 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ int	parent(char **av, int *fd, char **env, t_args *args)
 
 	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (outfile == -1)
-		return (perror("outfile"), 127);
+		return (127);
 	args->path->split_cmd = ft_split(av[3], ' ');
 	close(fd[1]);
 	dup2(fd[0], STDIN_FILENO);
@@ -44,7 +44,7 @@ int	child(char **av, int *fd, char **env, t_args *args)
 
 	infile = open(av[1], O_RDWR, 0644);
 	if (infile == -1)
-		return (perror("infile"), 127);
+		return (127);
 	args->path->split_cmd = ft_split(av[2], ' ');
 	dup2(infile, STDIN_FILENO);
 	close(infile);
@@ -70,7 +70,7 @@ char	*get_cmd_path(char *cmd, char **env, t_args *args)
 
 	i = -1;
 	if (access(cmd, X_OK) == 0)
-		return (ft_strdup(cmd));
+		return (cmd);
 	while (env[++i])
 	{
 		if (ft_strncmp(env[i], "PATH=", 5) == 0)
@@ -91,26 +91,16 @@ char	*get_cmd_path(char *cmd, char **env, t_args *args)
 	return (NULL);
 }
 
-t_args	*init_struct(int argc, char **argv, char **env)
+void	shorten_main(t_args *args, int *fd)
 {
-	t_args	*args;
-	t_path	*path;
-
-	args = malloc(sizeof(t_args));
-	if (!args)
-		return (NULL);
-	path = malloc(sizeof(t_path));
-	if (!path)
-		return (NULL);
-	args->path = path;
-	args->ac = argc;
-	args->av = argv;
-	args->env = env;
-	args->path->cmd = NULL;
-	args->path->full_path = NULL;
-	args->path->paths = NULL;
-	args->path->split_cmd = NULL;
-	return (args);
+	close(fd[0]);
+	close(fd[1]);
+	while (1)
+	{
+		if (waitpid(args->pid1, NULL, WNOHANG) != 0 && waitpid(args->pid2, NULL,
+				WNOHANG) != 0)
+			break ;
+	}
 }
 
 int	main(int argc, char **argv, char **env)
@@ -137,6 +127,6 @@ int	main(int argc, char **argv, char **env)
 		if (parent(args->av, fd, args->env, args))
 			return (free_struct(args), 127);
 	}
-	wait(NULL);
+	shorten_main(args, fd);
 	return (free_struct(args), 0);
 }
