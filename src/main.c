@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
-/*   Updated: 2025/05/06 13:03:47 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/05/06 17:11:30 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ int	parent(char **av, int *fd, char **env, t_args *args)
 
 	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (outfile == -1)
-		return (127);
+		return (error_open(av, fd, 4));
 	args->path->split_cmd = ft_split(av[3], ' ');
 	close(fd[1]);
 	dup2(fd[0], STDIN_FILENO);
@@ -44,7 +44,7 @@ int	child(char **av, int *fd, char **env, t_args *args)
 
 	infile = open(av[1], O_RDWR, 0644);
 	if (infile == -1)
-		return (127);
+		return (error_open(av, fd, 1));
 	args->path->split_cmd = ft_split(av[2], ' ');
 	dup2(infile, STDIN_FILENO);
 	close(infile);

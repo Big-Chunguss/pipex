@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
-/*   Updated: 2025/05/06 11:19:29 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/05/06 17:16:36 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,20 @@ void	free_struct(t_args *args)
 		free(args->path);
 	}
 	free(args);
+}
+
+int	error_open(char **av, int *fd, int i)
+{	
+	close(fd[0]);
+	close(fd[1]);
+	if (i == 4)
+		if (access(av[1], F_OK) || access(av[1], X_OK))
+			return (127);
+	if (access(av[i], F_OK))
+		ft_printf("no such file or directory: %s\n", av[i]);
+	else if (access(av[i], X_OK))
+		ft_printf("%s: Permission denied\n", av[i]);
+	return (127);
 }
 
 t_args	*init_struct(int argc, char **argv, char **env)
