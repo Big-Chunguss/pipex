@@ -6,7 +6,7 @@
 /*   By: agaroux <agaroux@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/19 16:16:42 by agaroux           #+#    #+#             */
-/*   Updated: 2025/05/06 17:11:30 by agaroux          ###   ########.fr       */
+/*   Updated: 2025/05/12 14:31:20 by agaroux          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ int	parent(char **av, int *fd, char **env, t_args *args)
 	int	outfile;
 
 	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (outfile == -1)
+	if (outfile == -1 || access(av[4], W_OK) == -1)
 		return (error_open(av, fd, 4));
 	args->path->split_cmd = ft_split(av[3], ' ');
 	close(fd[1]);
@@ -58,7 +58,7 @@ int	child(char **av, int *fd, char **env, t_args *args)
 	}
 	args->path->cmd = get_cmd_path(args->path->split_cmd[0], env, args);
 	if (!args->path->cmd)
-		return (write(2, "command not found child\n", 23), 127);
+		return (write(2, "command not found %s\n", 23), 127);
 	if (execve(args->path->cmd, args->path->split_cmd, env) == -1)
 		return (perror("execve"), 127);
 	return (0);
